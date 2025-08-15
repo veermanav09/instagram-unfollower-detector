@@ -61,7 +61,7 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ data, onExport }
           </CardContent>
         </Card>
 
-        <Card className="bg-success text-success-foreground hover-scale">
+        <Card className="bg-gradient-to-br from-success to-green-600 text-success-foreground hover-scale shadow-lg">
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
               <TrendingUp className="h-5 w-5" />
@@ -74,99 +74,77 @@ export const ResultsDisplay: React.FC<ResultsDisplayProps> = ({ data, onExport }
         </Card>
       </div>
 
-      {/* Results Cards */}
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Not Following Back */}
-        <Card className="hover-scale">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <div className="p-2 rounded-full bg-destructive/10">
-                  <UserMinus className="h-5 w-5 text-destructive" />
-                </div>
-                <span>Not Following You Back</span>
+      {/* Not Following Back - Full Width with Enhanced Design */}
+      <Card className="overflow-hidden hover-scale bg-gradient-to-br from-background to-destructive/5 border-destructive/20">
+        <CardHeader className="bg-gradient-to-r from-destructive/10 to-destructive/5 border-b border-destructive/20">
+          <CardTitle className="flex items-center justify-between text-xl">
+            <div className="flex items-center space-x-3">
+              <div className="p-3 rounded-full bg-destructive text-destructive-foreground shadow-lg animate-pulse">
+                <UserMinus className="h-6 w-6" />
               </div>
-              <Badge variant="destructive">{stats.notFollowingBackCount}</Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="max-h-64 overflow-y-auto space-y-2">
-              {notFollowingBack.length === 0 ? (
-                <p className="text-muted-foreground text-center py-4">
-                  🎉 Everyone you follow follows you back!
-                </p>
-              ) : (
-                notFollowingBack.map((username, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-2 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
-                  >
-                    <span className="font-medium">@{username}</span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => window.open(`https://instagram.com/${username}`, '_blank')}
-                    >
-                      View Profile
-                    </Button>
-                  </div>
-                ))
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Mutual Followers */}
-        <Card className="hover-scale">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <div className="p-2 rounded-full bg-success/10">
-                  <UserCheck className="h-5 w-5 text-success" />
-                </div>
-                <span>Mutual Followers</span>
+              <div>
+                <span className="text-destructive">People Not Following You Back</span>
+                <p className="text-sm text-muted-foreground font-normal">Users you follow who don't follow you</p>
               </div>
-              <Badge className="bg-success text-success-foreground">{stats.mutualFollowersCount}</Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="max-h-64 overflow-y-auto space-y-2">
-              {mutualFollowers.length === 0 ? (
-                <p className="text-muted-foreground text-center py-4">
-                  No mutual followers found
-                </p>
-              ) : (
-                mutualFollowers.slice(0, 50).map((username, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-2 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
-                  >
-                    <span className="font-medium">@{username}</span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => window.open(`https://instagram.com/${username}`, '_blank')}
-                    >
-                      View Profile
-                    </Button>
-                  </div>
-                ))
-              )}
-              {mutualFollowers.length > 50 && (
-                <p className="text-xs text-muted-foreground text-center pt-2">
-                  Showing first 50 of {mutualFollowers.length} mutual followers
-                </p>
-              )}
             </div>
-          </CardContent>
-        </Card>
-      </div>
+            <Badge variant="destructive" className="text-lg px-3 py-1 shadow-md">
+              {stats.notFollowingBackCount}
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-6">
+          {notFollowingBack.length === 0 ? (
+            <div className="text-center py-12 animate-fade-in">
+              <div className="text-8xl mb-6 animate-bounce">🎉</div>
+              <h3 className="text-2xl font-bold text-success mb-2">Perfect Follow Ratio!</h3>
+              <p className="text-lg text-muted-foreground">
+                Everyone you follow follows you back!
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto">
+              {notFollowingBack.map((username, index) => (
+                <div
+                  key={index}
+                  className="group flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-background to-muted/30 border border-border hover:border-destructive/30 hover:shadow-lg transition-all duration-300 hover:scale-105"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-gradient-to-r from-destructive to-red-600 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-md">
+                      {username.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <span className="font-semibold text-destructive group-hover:text-red-700 transition-colors">
+                        @{username}
+                      </span>
+                      <p className="text-xs text-muted-foreground">Not following back</p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="opacity-0 group-hover:opacity-100 transition-all hover:bg-destructive/10 hover:text-destructive"
+                    onClick={() => window.open(`https://instagram.com/${username}`, '_blank')}
+                  >
+                    <Users className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Export Button */}
-      <div className="flex justify-center">
-        <Button variant="gradient" size="lg" onClick={onExport}>
-          <Download className="h-5 w-5 mr-2" />
-          Export Results
+      <div className="flex justify-center animate-fade-in">
+        <Button 
+          variant="gradient" 
+          size="lg" 
+          onClick={onExport}
+          className="px-8 py-4 text-lg shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_200%] animate-gradient-x"
+        >
+          <Download className="h-5 w-5 mr-3" />
+          <span className="font-semibold">Export Detailed Report</span>
         </Button>
       </div>
     </div>

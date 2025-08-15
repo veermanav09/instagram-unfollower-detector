@@ -132,19 +132,18 @@ export const parseTextData = (content: string): string[] => {
 
 export const processData = (followers: string[], following: string[]): ProcessedData => {
   const followersSet = new Set(followers);
-  const followingSet = new Set(following);
   
   // Find people you follow who don't follow you back
   const notFollowingBack = following.filter(username => !followersSet.has(username));
   
-  // Find mutual followers (people who follow you and you follow them)
-  const mutualFollowers = followers.filter(username => followingSet.has(username));
+  console.log(`Processing: ${followers.length} followers, ${following.length} following`);
+  console.log(`Found ${notFollowingBack.length} users not following back:`, notFollowingBack);
   
   return {
     followers,
     following,
     notFollowingBack,
-    mutualFollowers
+    mutualFollowers: [] // Not needed anymore
   };
 };
 
