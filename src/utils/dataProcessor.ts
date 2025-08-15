@@ -10,20 +10,40 @@ export const parseJSONData = (content: string, type: 'followers' | 'following'):
       const followersData = data as FollowersData;
       console.log('Followers data structure:', followersData);
       if (followersData.relationships_followers) {
-        const extracted = followersData.relationships_followers.flatMap(item =>
-          item.string_list_data.map(user => user.value)
-        );
-        console.log(`Extracted ${extracted.length} followers`);
+        // Get current followers by finding the most recent timestamp for each user
+        const userMap = new Map<string, number>();
+        
+        followersData.relationships_followers.forEach(item => {
+          item.string_list_data.forEach(user => {
+            const existingTimestamp = userMap.get(user.value);
+            if (!existingTimestamp || user.timestamp > existingTimestamp) {
+              userMap.set(user.value, user.timestamp);
+            }
+          });
+        });
+        
+        const extracted = Array.from(userMap.keys());
+        console.log(`Extracted ${extracted.length} current followers`);
         return extracted;
       }
     } else {
       const followingData = data as FollowingData;
       console.log('Following data structure:', followingData);
       if (followingData.relationships_following) {
-        const extracted = followingData.relationships_following.flatMap(item =>
-          item.string_list_data.map(user => user.value)
-        );
-        console.log(`Extracted ${extracted.length} following`);
+        // Get current following by finding the most recent timestamp for each user
+        const userMap = new Map<string, number>();
+        
+        followingData.relationships_following.forEach(item => {
+          item.string_list_data.forEach(user => {
+            const existingTimestamp = userMap.get(user.value);
+            if (!existingTimestamp || user.timestamp > existingTimestamp) {
+              userMap.set(user.value, user.timestamp);
+            }
+          });
+        });
+        
+        const extracted = Array.from(userMap.keys());
+        console.log(`Extracted ${extracted.length} current following`);
         return extracted;
       }
     }
