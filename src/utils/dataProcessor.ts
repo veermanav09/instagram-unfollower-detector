@@ -2,36 +2,48 @@ import { FollowersData, FollowingData, ProcessedData } from '@/types/instagram';
 
 export const parseJSONData = (content: string, type: 'followers' | 'following'): string[] => {
   try {
+    console.log(`Parsing ${type} data, content length:`, content.length);
     const data = JSON.parse(content);
+    console.log(`Parsed ${type} data structure:`, data);
     
     if (type === 'followers') {
       const followersData = data as FollowersData;
+      console.log('Followers data structure:', followersData);
       if (followersData.relationships_followers) {
-        return followersData.relationships_followers.flatMap(item =>
+        const extracted = followersData.relationships_followers.flatMap(item =>
           item.string_list_data.map(user => user.value)
         );
+        console.log(`Extracted ${extracted.length} followers`);
+        return extracted;
       }
     } else {
       const followingData = data as FollowingData;
+      console.log('Following data structure:', followingData);
       if (followingData.relationships_following) {
-        return followingData.relationships_following.flatMap(item =>
+        const extracted = followingData.relationships_following.flatMap(item =>
           item.string_list_data.map(user => user.value)
         );
+        console.log(`Extracted ${extracted.length} following`);
+        return extracted;
       }
     }
     
     // Fallback for other JSON structures
+    console.log('Trying fallback parsing for', type);
     if (Array.isArray(data)) {
-      return data.map(item => 
+      const extracted = data.map(item => 
         typeof item === 'string' ? item : 
         item.username || item.value || item.name || String(item)
       );
+      console.log(`Fallback extracted ${extracted.length} ${type}`);
+      return extracted;
     }
     
+    console.log(`No ${type} data found in JSON structure`);
     return [];
   } catch (error) {
-    console.error('Error parsing JSON:', error);
-    throw new Error('Invalid JSON format');
+    console.error(`Error parsing JSON for ${type}:`, error);
+    throw new Error(`Invalid JSON format for ${type}: ${error.message}`);
   }
 };
 
