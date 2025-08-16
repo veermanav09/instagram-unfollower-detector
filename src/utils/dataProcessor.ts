@@ -33,7 +33,7 @@ export const parseJSONData = (content: string, type: 'followers' | 'following'):
         
         followersData.relationships_followers.forEach(item => {
           item.string_list_data.forEach(user => {
-            const handle = normalizeUsername(user.value);
+            const handle = normalizeUsername(user.href || user.value);
             if (!handle) return;
             const existingTimestamp = userMap.get(handle);
             if (!existingTimestamp || user.timestamp > existingTimestamp) {
@@ -55,7 +55,7 @@ export const parseJSONData = (content: string, type: 'followers' | 'following'):
         
         followingData.relationships_following.forEach(item => {
           item.string_list_data.forEach(user => {
-            const handle = normalizeUsername(user.value);
+            const handle = normalizeUsername(user.href || user.value);
             if (!handle) return;
             const existingTimestamp = userMap.get(handle);
             if (!existingTimestamp || user.timestamp > existingTimestamp) {
@@ -76,7 +76,7 @@ export const parseJSONData = (content: string, type: 'followers' | 'following'):
       const extracted = data
         .map(item => (typeof item === 'string'
           ? item
-          : item.username || item.value || item.name || String(item)))
+          : item.username || item.href || item.value || item.name || String(item)))
         .map(normalizeUsername)
         .filter(u => u);
       console.log(`Fallback extracted ${extracted.length} ${type}`);
