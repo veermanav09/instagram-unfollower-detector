@@ -2,9 +2,9 @@
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/577c7978-1d48-48d9-889d-08651295d419
+**URL**: [https://lovable.dev/projects/577c7978-1d48-48d9-889d-08651295d419](https://instagram-unfollower-detector.lovable.app)
 
-## How can I edit this code?
+## How can I contribute to this code?
 
 There are several ways of editing your application.
 
@@ -59,15 +59,3 @@ This project is built with:
 - React
 - shadcn-ui
 - Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/577c7978-1d48-48d9-889d-08651295d419) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
