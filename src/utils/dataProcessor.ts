@@ -23,69 +23,75 @@ export const parseJSONData = (content: string, type: 'followers' | 'following'):
     console.log(`Parsing ${type} data, content length:`, content.length);
     const data = JSON.parse(content);
     console.log(`Parsed ${type} data structure:`, data);
-    
+
+    // Helper: add handle with the most recent timestamp
+    const userMap = new Map<string, number>();
+    const addHandle = (raw: string | undefined | null, ts?: number) => {
+      const handle = normalizeUsername(raw || '');
+      if (!handle) return;
+      const existing = userMap.get(handle) ?? -Infinity;
+      const time = typeof ts === 'number' ? ts : -Infinity;
+      if (time >= existing) userMap.set(handle, time);
+    };
+
+    // Extractors that work across known and slightly different JSON variants
+    const extractFromStringListItem = (item: any) => {
+      if (!item) return;
+      const href = item.href as string | undefined;
+      const value = item.value as string | undefined;
+      const ts = item.timestamp as number | undefined;
+      // Prefer href then value
+      addHandle(href || value, ts);
+    };
+
+    const extractFromContainer = (container: any[] | undefined) => {
+      if (!Array.isArray(container)) return;
+      container.forEach(rec => {
+        // Typical shape: { string_list_data: [ { href, value, timestamp } ] }
+        if (rec && Array.isArray((rec as any).string_list_data)) {
+          (rec as any).string_list_data.forEach(extractFromStringListItem);
+        } else if (rec) {
+          // Sometimes items are direct objects with href/value/username
+          const href = (rec as any).href as string | undefined;
+          const value = (rec as any).value as string | undefined;
+          const username = (rec as any).username as string | undefined;
+          const ts = (rec as any).timestamp as number | undefined;
+          addHandle(href || username || value, ts);
+        }
+      });
+    };
+
+    // 1) Handle canonical keys first
     if (type === 'followers') {
       const followersData = data as FollowersData;
-      console.log('Followers data structure:', followersData);
       if (followersData.relationships_followers) {
-        // Get current followers by finding the most recent timestamp for each user
-        const userMap = new Map<string, number>();
-        
-        followersData.relationships_followers.forEach(item => {
-          item.string_list_data.forEach(user => {
-            const handle = normalizeUsername(user.href || user.value);
-            if (!handle) return;
-            const existingTimestamp = userMap.get(handle);
-            if (!existingTimestamp || user.timestamp > existingTimestamp) {
-              userMap.set(handle, user.timestamp);
-            }
-          });
-        });
-        
-        const extracted = Array.from(userMap.keys());
-        console.log(`Extracted ${extracted.length} current followers`);
-        return extracted;
+        extractFromContainer(followersData.relationships_followers as any);
       }
     } else {
       const followingData = data as FollowingData;
-      console.log('Following data structure:', followingData);
       if (followingData.relationships_following) {
-        // Get current following by finding the most recent timestamp for each user
-        const userMap = new Map<string, number>();
-        
-        followingData.relationships_following.forEach(item => {
-          item.string_list_data.forEach(user => {
-            const handle = normalizeUsername(user.href || user.value);
-            if (!handle) return;
-            const existingTimestamp = userMap.get(handle);
-            if (!existingTimestamp || user.timestamp > existingTimestamp) {
-              userMap.set(handle, user.timestamp);
-            }
-          });
-        });
-        
-        const extracted = Array.from(userMap.keys());
-        console.log(`Extracted ${extracted.length} current following`);
-        return extracted;
+        extractFromContainer(followingData.relationships_following as any);
       }
     }
-    
-    // Fallback for other JSON structures
-    console.log('Trying fallback parsing for', type);
-    if (Array.isArray(data)) {
-      const extracted = data
-        .map(item => (typeof item === 'string'
-          ? item
-          : item.username || item.href || item.value || item.name || String(item)))
-        .map(normalizeUsername)
-        .filter(u => u);
-      console.log(`Fallback extracted ${extracted.length} ${type}`);
-      return Array.from(new Set(extracted));
+
+    // 2) If nothing found yet, try common alternatives and a light recursive scan
+    const hasAny = userMap.size > 0;
+    if (!hasAny) {
+      // Some exports place arrays directly at top level or under different keys
+      if (Array.isArray(data)) {
+        extractFromContainer(data);
+      } else if (data && typeof data === 'object') {
+        // Look for any array-valued property that contains string_list_data records
+        Object.values(data as Record<string, unknown>).forEach(val => {
+          if (Array.isArray(val)) extractFromContainer(val as any[]);
+        });
+      }
     }
-    
-    console.log(`No ${type} data found in JSON structure`);
-    return [];
-  } catch (error) {
+
+    const extracted = Array.from(userMap.keys());
+    console.log(`Extracted ${extracted.length} current ${type}`);
+    return extracted;
+  } catch (error: any) {
     console.error(`Error parsing JSON for ${type}:`, error);
     throw new Error(`Invalid JSON format for ${type}: ${error.message}`);
   }
