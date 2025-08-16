@@ -1,5 +1,23 @@
 import { FollowersData, FollowingData, ProcessedData } from '@/types/instagram';
 
+// Normalize usernames to a consistent, comparable handle
+const normalizeUsername = (raw: string | undefined | null): string => {
+  if (!raw) return '';
+  let u = raw.trim();
+  // Strip URLs and protocols
+  u = u.replace(/^https?:\/\/(www\.)?instagram\.com\//i, '');
+  u = u.replace(/^instagram\.com\//i, '');
+  // Remove query/paths and trailing slashes
+  u = u.split('?')[0].split('/')[0];
+  // Strip leading @
+  u = u.replace(/^@/, '');
+  // Lowercase
+  u = u.toLowerCase();
+  // Keep only valid instagram handle chars (letters, numbers, dot, underscore)
+  u = u.replace(/[^a-z0-9._]/g, '');
+  return u;
+};
+
 export const parseJSONData = (content: string, type: 'followers' | 'following'): string[] => {
   try {
     console.log(`Parsing ${type} data, content length:`, content.length);
@@ -15,9 +33,11 @@ export const parseJSONData = (content: string, type: 'followers' | 'following'):
         
         followersData.relationships_followers.forEach(item => {
           item.string_list_data.forEach(user => {
-            const existingTimestamp = userMap.get(user.value);
+            const handle = normalizeUsername(user.value);
+            if (!handle) return;
+            const existingTimestamp = userMap.get(handle);
             if (!existingTimestamp || user.timestamp > existingTimestamp) {
-              userMap.set(user.value, user.timestamp);
+              userMap.set(handle, user.timestamp);
             }
           });
         });
@@ -35,9 +55,11 @@ export const parseJSONData = (content: string, type: 'followers' | 'following'):
         
         followingData.relationships_following.forEach(item => {
           item.string_list_data.forEach(user => {
-            const existingTimestamp = userMap.get(user.value);
+            const handle = normalizeUsername(user.value);
+            if (!handle) return;
+            const existingTimestamp = userMap.get(handle);
             if (!existingTimestamp || user.timestamp > existingTimestamp) {
-              userMap.set(user.value, user.timestamp);
+              userMap.set(handle, user.timestamp);
             }
           });
         });
@@ -51,12 +73,14 @@ export const parseJSONData = (content: string, type: 'followers' | 'following'):
     // Fallback for other JSON structures
     console.log('Trying fallback parsing for', type);
     if (Array.isArray(data)) {
-      const extracted = data.map(item => 
-        typeof item === 'string' ? item : 
-        item.username || item.value || item.name || String(item)
-      );
+      const extracted = data
+        .map(item => (typeof item === 'string'
+          ? item
+          : item.username || item.value || item.name || String(item)))
+        .map(normalizeUsername)
+        .filter(u => u);
       console.log(`Fallback extracted ${extracted.length} ${type}`);
-      return extracted;
+      return Array.from(new Set(extracted));
     }
     
     console.log(`No ${type} data found in JSON structure`);
@@ -72,46 +96,40 @@ export const parseHTMLData = (content: string): string[] => {
     // Create a temporary div to parse HTML
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = content;
-    
-    // Look for common Instagram HTML patterns
+
+    // Collect potential usernames
     const usernames: string[] = [];
-    
+
     // Try different selectors that Instagram might use
     const selectors = [
       'a[href*="instagram.com/"]',
-      '.user-link',
       '[data-username]',
-      'a[href*="/"]'
+      '.user-link',
+      'a[href^="/"]',
+      'a'
     ];
-    
+
     for (const selector of selectors) {
       const elements = tempDiv.querySelectorAll(selector);
-      elements.forEach(element => {
-        const href = element.getAttribute('href');
-        const username = element.getAttribute('data-username') || 
-                        element.textContent?.trim();
-        
-        if (href) {
-          // Extract username from Instagram URL
-          const match = href.match(/instagram\.com\/([^/?]+)/);
-          if (match && match[1]) {
-            usernames.push(match[1]);
-          }
-        } else if (username && username !== '') {
-          usernames.push(username);
-        }
+      elements.forEach(el => {
+        const href = el.getAttribute('href') || '';
+        const dataUsername = el.getAttribute('data-username') || '';
+        const text = el.textContent?.trim() || '';
+
+        const fromHref = normalizeUsername(href);
+        const fromData = normalizeUsername(dataUsername);
+        const fromText = normalizeUsername(text);
+
+        if (fromHref) usernames.push(fromHref);
+        else if (fromData) usernames.push(fromData);
+        else if (fromText) usernames.push(fromText);
       });
-      
+
       if (usernames.length > 0) break;
     }
-    
+
     // Remove duplicates and filter out invalid usernames
-    return [...new Set(usernames)].filter(username => 
-      username && 
-      username.length > 0 && 
-      !username.includes(' ') &&
-      username !== 'instagram.com'
-    );
+    return Array.from(new Set(usernames)).filter(u => u && u !== 'instagram.com');
   } catch (error) {
     console.error('Error parsing HTML:', error);
     throw new Error('Invalid HTML format');
@@ -120,28 +138,36 @@ export const parseHTMLData = (content: string): string[] => {
 
 export const parseTextData = (content: string): string[] => {
   if (!content.trim()) return [];
-  
   // Split by common delimiters and clean up
   const usernames = content
     .split(/[\n,\s]+/)
-    .map(username => username.trim().replace(/^@/, ''))
-    .filter(username => username.length > 0);
-  
-  return [...new Set(usernames)];
+    .map(normalizeUsername)
+    .filter(u => u);
+  return Array.from(new Set(usernames));
 };
 
 export const processData = (followers: string[], following: string[]): ProcessedData => {
-  const followersSet = new Set(followers);
-  
-  // Find people you follow who don't follow you back
-  const notFollowingBack = following.filter(username => !followersSet.has(username));
-  
-  console.log(`Processing: ${followers.length} followers, ${following.length} following`);
+  // Normalize everything defensively
+  const followersNorm = followers.map(normalizeUsername).filter(u => u);
+  const followingNorm = following.map(normalizeUsername).filter(u => u);
+
+  const followersSet = new Set(followersNorm);
+
+  // People you follow who don't follow you back (today)
+  const notFollowingBack = followingNorm.filter(u => !followersSet.has(u));
+
+  console.log(`Processing (normalized): ${followersNorm.length} followers, ${followingNorm.length} following`);
+  if (followingNorm.length === notFollowingBack.length && followersNorm.length > 0) {
+    console.warn('All following flagged as not following back. Likely normalization mismatch in inputs. Sample:', {
+      sampleFollowing: followingNorm.slice(0, 5),
+      sampleFollowers: followersNorm.slice(0, 5),
+    });
+  }
   console.log(`Found ${notFollowingBack.length} users not following back:`, notFollowingBack);
-  
+
   return {
-    followers,
-    following,
+    followers: followersNorm,
+    following: followingNorm,
     notFollowingBack,
     mutualFollowers: [] // Not needed anymore
   };
