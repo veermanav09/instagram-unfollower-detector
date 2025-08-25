@@ -1,125 +1,122 @@
-import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, Download, Copy, FileText } from 'lucide-react';
+import React from 'react';
+import { Download, FileText } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Button } from './ui/button';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
-
-interface InstructionCardProps {
-  title: string;
-  icon: React.ReactNode;
-  children: React.ReactNode;
-}
-
-const InstructionCard: React.FC<InstructionCardProps> = ({ title, icon, children }) => {
-  const [isOpen, setIsOpen] = useState(false);
-
-  return (
-    <Card className="overflow-hidden hover-scale">
-      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-        <CollapsibleTrigger asChild>
-          <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
-            <CardTitle className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="p-2 rounded-full bg-primary/10">
-                  {icon}
-                </div>
-                {title}
-              </div>
-              {isOpen ? (
-                <ChevronUp className="h-5 w-5 text-muted-foreground" />
-              ) : (
-                <ChevronDown className="h-5 w-5 text-muted-foreground" />
-              )}
-            </CardTitle>
-          </CardHeader>
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <CardContent className="pt-0">
-            {children}
-          </CardContent>
-        </CollapsibleContent>
-      </Collapsible>
-    </Card>
-  );
-};
-
-export const HowToDownloadCard: React.FC = () => (
-  <InstructionCard
-    title="How to Download Instagram Data"
-    icon={<Download className="h-5 w-5 text-primary" />}
-  >
-    <div className="space-y-4">
-      <div className="bg-gradient-secondary rounded-lg p-4">
-        <h4 className="font-semibold text-sm mb-2">For JSON Files:</h4>
-        <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
-          <li>Go to Instagram Settings → Privacy and Security</li>
-          <li>Click "Data Download" → "Request Download"</li>
-          <li>Select "JSON" format and submit request</li>
-          <li>Wait for email with download link (can take up to 48 hours)</li>
-          <li>Extract the ZIP file and look for:
-            <ul className="list-disc list-inside ml-4 mt-1">
-              <li><code className="bg-muted px-1 rounded">connections/followers_1.json</code></li>
-              <li><code className="bg-muted px-1 rounded">connections/following.json</code></li>
-            </ul>
-          </li>
-        </ol>
-      </div>
-      
-      <div className="bg-warning/10 rounded-lg p-4">
-        <h4 className="font-semibold text-sm mb-2">Alternative Method (HTML):</h4>
-        <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
-          <li>Go to Instagram Settings → Privacy and Security</li>
-          <li>Click "Data Download" → "Request Download"</li>
-          <li>Select "HTML" format for faster processing</li>
-          <li>Look for HTML files in the connections folder</li>
-        </ol>
-      </div>
-    </div>
-  </InstructionCard>
-);
-
-export const HowToUseCard: React.FC = () => (
-  <InstructionCard
-    title="How to Use This Tool"
-    icon={<FileText className="h-5 w-5 text-primary" />}
-  >
-    <div className="space-y-4">
-      <div className="bg-gradient-accent/10 rounded-lg p-4">
-        <h4 className="font-semibold text-sm mb-2">Three Input Methods:</h4>
-        <div className="space-y-3 text-sm text-muted-foreground">
-          <div className="flex items-start space-x-2">
-            <span className="font-medium text-primary">1. JSON Files:</span>
-            <span>Upload your followers.json and following.json files</span>
-          </div>
-          <div className="flex items-start space-x-2">
-            <span className="font-medium text-primary">2. Copy & Paste:</span>
-            <span>Paste your followers and following lists as text</span>
-          </div>
-          <div className="flex items-start space-x-2">
-            <span className="font-medium text-primary">3. HTML Files:</span>
-            <span>Upload HTML files from Instagram data export</span>
-          </div>
-        </div>
-      </div>
-      
-      <div className="bg-success/10 rounded-lg p-4">
-        <h4 className="font-semibold text-sm mb-2">What You'll Get:</h4>
-        <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-          <li>List of people who don't follow you back</li>
-          <li>Your mutual followers</li>
-          <li>Detailed statistics and analytics</li>
-          <li>Option to export results</li>
-        </ul>
-      </div>
-    </div>
-  </InstructionCard>
-);
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion';
 
 export const InstructionCards: React.FC = () => {
   return (
-    <div className="grid gap-4 md:grid-cols-2">
-      <HowToDownloadCard />
-      <HowToUseCard />
+    <div className="grid gap-6 md:grid-cols-2">
+      <Card className="overflow-hidden hover-scale">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center space-x-3">
+            <div className="p-2 rounded-full bg-primary/10">
+              <Download className="h-5 w-5 text-primary" />
+            </div>
+            <span>How to Download Instagram Data</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="download-steps" className="border-none">
+              <AccordionTrigger className="py-2 text-left">
+                <span className="text-sm font-medium">View Download Steps</span>
+              </AccordionTrigger>
+              <AccordionContent className="pb-0">
+                <div className="space-y-4 mt-2">
+                  <div className="bg-gradient-secondary rounded-lg p-4">
+                    <h4 className="font-semibold text-sm mb-3 text-foreground">New Instagram Export Process:</h4>
+                    <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
+                      <li>Open Instagram app or go to instagram.com</li>
+                      <li>Navigate to <strong>Settings</strong></li>
+                      <li>Select <strong>Meta Accounts Center</strong></li>
+                      <li>Go to <strong>Your information and permissions</strong></li>
+                      <li>Click <strong>Download your information</strong></li>
+                      <li>Select your Instagram account</li>
+                      <li>Choose <strong>Some of your information</strong></li>
+                      <li>Select <strong>Followers and following</strong></li>
+                      <li>Choose <strong>JSON</strong> format</li>
+                      <li>Submit your request and wait for the download link</li>
+                      <li>Extract ZIP and find:
+                        <ul className="list-disc list-inside ml-4 mt-2 space-y-1">
+                          <li><code className="bg-muted px-1 rounded text-xs">connections/followers_1.json</code></li>
+                          <li><code className="bg-muted px-1 rounded text-xs">connections/following.json</code></li>
+                        </ul>
+                      </li>
+                    </ol>
+                  </div>
+                  
+                  <div className="bg-warning/10 rounded-lg p-4">
+                    <h4 className="font-semibold text-sm mb-2 text-foreground">💡 Pro Tip:</h4>
+                    <p className="text-sm text-muted-foreground">
+                      The download can take up to 48 hours. You'll receive an email when it's ready.
+                    </p>
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </CardContent>
+      </Card>
+
+      <Card className="overflow-hidden hover-scale">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center space-x-3">
+            <div className="p-2 rounded-full bg-primary/10">
+              <FileText className="h-5 w-5 text-primary" />
+            </div>
+            <span>How to Use This Tool</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="usage-guide" className="border-none">
+              <AccordionTrigger className="py-2 text-left">
+                <span className="text-sm font-medium">View Usage Guide</span>
+              </AccordionTrigger>
+              <AccordionContent className="pb-0">
+                <div className="space-y-4 mt-2">
+                  <div className="bg-gradient-accent/10 rounded-lg p-4">
+                    <h4 className="font-semibold text-sm mb-3 text-foreground">Three Input Methods:</h4>
+                    <div className="space-y-3 text-sm">
+                      <div className="flex items-start space-x-3">
+                        <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs">1</div>
+                        <div>
+                          <span className="font-medium text-foreground">JSON Files</span>
+                          <p className="text-muted-foreground text-xs mt-1">Upload your followers.json and following.json files directly</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start space-x-3">
+                        <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs">2</div>
+                        <div>
+                          <span className="font-medium text-foreground">Copy & Paste</span>
+                          <p className="text-muted-foreground text-xs mt-1">Paste your followers and following lists as plain text</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start space-x-3">
+                        <div className="flex-shrink-0 w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-xs">3</div>
+                        <div>
+                          <span className="font-medium text-foreground">HTML Files</span>
+                          <p className="text-muted-foreground text-xs mt-1">Upload HTML files from Instagram data export</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-success/10 rounded-lg p-4">
+                    <h4 className="font-semibold text-sm mb-3 text-foreground">📊 Analysis Results:</h4>
+                    <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+                      <li>Users who don't follow you back</li>
+                      <li>Your mutual followers</li>
+                      <li>Detailed follower statistics</li>
+                      <li>Export results for future reference</li>
+                    </ul>
+                  </div>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </CardContent>
+      </Card>
     </div>
   );
 };
